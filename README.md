@@ -42,13 +42,11 @@ The mechanic connects to the project's vision by making the universe emotionally
 
 **Scheduled Planet Explosions**
 
-The time-based mechanic uses `millis()` and internal timers to trigger periodic planet explosion events at configurable intervals (e.g., every 8–15 seconds per planet). When a planet's timer expires, it enters an "explosion sequence" — a 2D animated burst effect rendered on the planet's surface using frame counters and sprite-like states.
+The time-based mechanic uses millis() and internal timers to trigger periodic planet explosion events at configurable intervals. Instead of creating a complex 3D explosion, the planet is built from small 2D particles from the beginning. When the timer expires, the planet enters a short explosion sequence: it first shakes slightly, then its particles burst outward and scatter across the screen.
 
-The explosion is rendered in 2D (drawn flat onto the planet face to reduce complexity), using expanding circles, colour flashes, and particle-like rings that fade out over ~2 seconds. After exploding, the planet "reforms" — regenerating with a randomly selected new texture or colour, using the randomness mechanic.
+The explosion is controlled through simple state changes such as forming, shaking, exploding, scattered, and reforming. Each stage has a clear duration, making the mechanic easier to manage and debug. After the particles scatter, they gradually return to their original positions, allowing the planet to reform and continue the cycle.
 
-The mechanic connects to the vision by ensuring the scene is never static. Even if the user is idle, the universe continues to evolve — planets live and die on their own schedule. This reinforces the feeling that Cosmic Drift is a *living world*, not just a renderer. The staggered, randomised timers mean no two sessions feel the same, and the explosions serve as dramatic visual punctuation that rewards continued watching or interaction.
-
-> 📌 *Add a sketch of the explosion animation states (e.g., idle → building → burst → fade → reform) here.*
+This mechanic supports the vision of Cosmic Drift by keeping the universe alive even when the user is idle. The planet does not remain static; it periodically destabilises, explodes, scatters, and reforms on its own schedule. This creates the feeling of a living cosmic system, where planets are constantly changing rather than simply being displayed. The timed and slightly randomised movement also makes the scene feel less predictable and encourages users to keep watching.
 
 ---
 
