@@ -10,7 +10,7 @@
 
 We are creating **Cosmic Drift** — an original interactive 3D space experience built in p5.js. The user pilots a spaceship through a living solar system of stylised planets, where the world reacts dynamically to sound, time, noise, and movement.
 
-Our inspiration comes from the fluid, audio-reactive visuals of [Yuri Vishnevsky's *Silk*](http://weavesilk.com/), the generative cosmos of [Perlin-driven flow fields](https://editor.p5js.org/codingtrain/sketches/vDcIAbfg7), and the aesthetic of retro space games like *Asteroids* and *Space Engine*. The orbit-control 3D rendering style is inspired directly by the [p5.js 3D Orbit Control example](https://p5js.org/examples/3d-orbit-control/). Together, these references inform a piece that is part game, part generative art — reactive, alive, and visually cohesive.
+Our inspiration comes from the fluid, audio-reactive visuals of [Yuri Vishnevsky's *Silk*](http://weavesilk.com/), the generative cosmos of [Perlin-driven flow fields](https://editor.p5js.org/codingtrain/sketches/vDcIAbfg7), the aesthetic of retro space games like *Asteroids* and *Space Engine*, and the visual mood of this [instagram reference](https://www.instagram.com/p/DWeE6OFjjra/?img_index=1). The orbit-control 3D rendering style is inspired directly by the [p5.js 3D Orbit Control example](https://p5js.org/examples/3d-orbit-control/). Together, these references inform a piece that is part game, part generative art — reactive, alive, and visually cohesive.
 
 ---
 
@@ -19,9 +19,9 @@ Our inspiration comes from the fluid, audio-reactive visuals of [Yuri Vishnevsky
 ### Team Members & Mechanic Ownership
 
 | Team Member | Mechanic |
-| [Name 1] | 🎵 Audio |
-| [Name 2] | ⏱️ Time-based |
-| [Name 3] | 🌊 Perlin Noise & Randomness |
+| [Teeno] | 🎵 Audio |
+| [Zhaoyi Liu] | ⏱️ Time-based |
+| [Nandhini Iyengar] | 🌊 Perlin Noise & Randomness |
 | [Jodi Tan] | 🖱️ User Input |
 
 ---
