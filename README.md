@@ -52,15 +52,15 @@ The mechanic connects to the vision by ensuring the scene is never static. Even 
 
 ---
 
-### 🌊 Perlin Noise & Randomness — [Name 3]
+### 🌊 Perlin Noise & Randomness — [Nandhini Iyengar]
 
-**Background Flow Field & Shooting Stars**
+**Background Effects**
 
-The Perlin noise mechanic generates the living, breathing background of the scene — a flowing star field driven by a 2D Perlin noise flow field (inspired by the [p5.js Perlin noise flow field example](https://p5js.org/examples/simulate-noise/)). Hundreds of small particles are seeded across the canvas using `random()` with a fixed or user-adjustable `randomSeed()`. Each particle follows a velocity vector sampled from `noise(x, y, time)`, creating fluid, organic trails that evoke nebulae and cosmic gas.
+The Perlin noise mechanic generates the living, breathing background of the scene — a flowing star field driven by a 2D Perlin noise flow field (inspired by the [p5.js Perlin noise flow field example](https://p5js.org/examples/simulate-noise/)). A lot of small particles are seeded across the canvas using `random()` with a fixed or user-adjustable `randomSeed()`. Each particle follows a velocity vector sampled from `noise(x, y, time)`, creating fluid trails that evoke nebulae.
 
-Shooting stars are layered on top — triggered at random intervals using `random()`, with their trajectories also influenced by the noise field to feel consistent with the ambient flow rather than jarring.
+Shooting stars are layered on top and triggered at random intervals using `random()`, with their trajectories also influenced by the noise field to feel consistent with the ambient flow.
 
-The `randomSeed()` value is exposed as a parameter (optionally mapped to user input), meaning two sessions can look entirely different. The combination of Perlin noise (for smooth, coherent structure) and `random()` (for unpredictable event placement) creates a background that is simultaneously ordered and chaotic — mirroring the dual nature of space itself. This mechanic forms the visual "ground" that all other mechanics play on top of, giving the piece spatial and aesthetic cohesion.
+The `randomSeed()` value is exposed as a parameter (optionally mapped to user input), meaning two sessions can look entirely different. The combination of Perlin noise for smooth, coherent structure and `random()` for unpredictable event placement creates a background that is simultaneously ordered and chaotic — mirroring the dual nature of space itself. This mechanic forms the visual ground that all other mechanics play on top of, giving the piece spatial and aesthetic cohesion.
 
 ---
 
