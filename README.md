@@ -38,7 +38,7 @@ The mechanic connects to the project's vision by making the universe emotionally
 
 ---
 
-### ⏱️ Time-based — [Name 2]
+### ⏱️ Time-based — [Zhaoyi Liu]
 
 **Scheduled Planet Explosions**
 
