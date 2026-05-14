@@ -26,7 +26,7 @@ Our inspiration comes from the fluid, audio-reactive visuals of [Yuri Vishnevsky
 
 ---
 
-### 🎵 Audio — [Name 1]
+### 🎵 Audio — [Teeno]
 
 **Mic-driven Planet "Craziness"**
 
