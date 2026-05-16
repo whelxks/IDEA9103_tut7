@@ -1,7 +1,12 @@
+let planetSpread;
 let planetTexture;
+let planets;
+let rocketFlame;
+let rocket;
 
 function preload() {
-  planetTexture = loadImage("assets/mars_texture.jpg"); // TODO: have different textures for planets https://www.solarsystemscope.com/textures/
+  planetTexture = loadImage("assets/planet_textures/mars_texture.jpg"); // TODO: have different textures for planets https://www.solarsystemscope.com/textures/
+  rocketFlame = loadModel("assets/models/rocket_flame.obj", true); // true = normalize size
 }
 
 function setup() {
@@ -13,26 +18,23 @@ function setup() {
   describe(
     "Users can click on the screen and drag to adjust their perspective in 3D space. The space contains a sphere of dark purple cubes on a light pink background.",
   );
+
+  planetSpread = new PlanetSpreadSlider();
+  planetRadius = new PlanetRadiusSlider();
+  planets = new Planets(planetTexture, planetSpread, planetRadius);
+  rocket = new Rocket(0, 0, 0, rocketFlame, planetSpread);
 }
 
 function draw() {
   background(0, 0, 0);
 
   orbitControl();
+  rocket.move();
+  rocket.display();
 
-  for (let zAngle = 0; zAngle < 180; zAngle += 30) {
-    for (let xAngle = 0; xAngle < 360; xAngle += 30) {
-      push();
+  planets.display(rocket.position);
+}
 
-      rotateZ(zAngle);
-      rotateX(xAngle);
-
-      translate(0, 400, 0);
-      texture(planetTexture);
-
-      let r = map(sin(zAngle), 0, 1, 20, 40);
-      sphere(r); // dynamic radius
-      pop();
-    }
-  }
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
 }
