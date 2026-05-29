@@ -1,6 +1,6 @@
 class Planets {
-  constructor(texture, planetSpread, planetRadius) {
-    this.texture = texture;
+  constructor(planetTextures, planetSpread, planetRadius) {
+    this.planetTextures = planetTextures;
     this.planetSpread = planetSpread;
     this.planetRadius = planetRadius;
     this.planets = []; // store planet position
@@ -36,6 +36,7 @@ class Planets {
   }
 
   display(rocketPosition) {
+    noStroke();
     const spread = this.planetSpread.value();
     const radius = this.planetRadius.value();
 
@@ -61,7 +62,7 @@ class Planets {
     let min_d = Math.min(...this.planets.map((p) => p.d));
     let max_d = Math.max(...this.planets.map((p) => p.d));
 
-    for (let p of this.planets) {
+    for (let [i, p] of this.planets.entries()) {
       let proximity = constrain(map(p.d, max_d, min_d, 0, 1), 0, 1); // 0 = far away, 1 = right on top of planet
 
       push();
@@ -69,7 +70,7 @@ class Planets {
       rotateX(p.xAngle);
       translate(0, spread, 0);
 
-      texture(this.texture);
+      texture(this.planetTextures[i % this.planetTextures.length]);
       sphere(p.r, 8, 6); // reduce subdivisions so it doesnt lag
 
       // TODO: remove later - test yellow color
@@ -79,7 +80,8 @@ class Planets {
 
       resetShader();
       ambientLight(255);
-      emissiveMaterial(220 * proximity, 255 * proximity, 0);
+      let alpha = map(proximity, 0, 1, 30, 200);
+      emissiveMaterial(220 * proximity, 255 * proximity, 0, alpha);
       sphere(p.r, 8, 6);
 
       pop();

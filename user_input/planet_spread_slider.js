@@ -1,3 +1,4 @@
+// TODO: fix, increasing make planets all one texture
 class PlanetSpreadSlider {
   constructor() {
     this.label = createP("Planet spread");
