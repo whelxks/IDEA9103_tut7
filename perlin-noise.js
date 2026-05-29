@@ -1,17 +1,21 @@
+class PerlinNoise {
+  constructor() {
+    
+  }
 //fallback for when it's called with no argument
-function w(val) { //converts the units (0-1) into pixels for the canvas size
+ w(val) { //converts the units (0-1) into pixels for the canvas size
   if (val == null)
     return width;
   return val * width;
 }
 
-function h(val) {
+ h(val) {
   if (val == null)
     return height;
   return val * height;
 }
 
-function makeCircle(numberOfSides, radius) {
+ makeCircle(numberOfSides, radius) {
   const points = [];
   const distancePerStep = (Math.PI * 2) / numberOfSides; // going around the entire circle (2*Pi), and dividing into equidistant points
 
@@ -24,7 +28,7 @@ function makeCircle(numberOfSides, radius) {
   return points;
 }
 //a distortion of the points
-function distortPolygon(polygon) {
+ distortPolygon(polygon) {
   return polygon.map(point => {
       const x = point[0];
       const y = point[1];
@@ -54,7 +58,7 @@ function distortPolygon(polygon) {
 //taken from https://observablehq.com/@pamacha/chaikins-algorithm 
 //a recursive subdivision function - it slices off the corner of a polygon and repeats until the curve is smooth
 
-function chaikin(arr, num) {
+ chaikin(arr, num) {
   if (num === 0) return arr;
   const l = arr.length;
   const smooth = arr.map((c,i) => {
@@ -63,36 +67,37 @@ function chaikin(arr, num) {
       [0.25*c[0] + 0.75*arr[(i + 1)%l][0],0.25*c[1] + 0.75*arr[(i + 1)%l][1]]
     ];
   }).flat();
-  return num === 1 ? smooth : chaikin(smooth, num - 1);
+  return num === 1 ? smooth : this.chaikin(smooth, num - 1);
 }
 
-function setup() {
+/*function setup() {
   createCanvas(1536, 775);
 
   colorMode(HSB, 360, 100, 100, 1.0);
 }
+*/
 
-function draw() {
+ backgroundCircles() {
   //black background with a light grey stroke for the circles
-
   background(0, 0, 0);  
   noFill();             
-  stroke(0, 0, 95);     
-  strokeWeight(w(0.001)); 
+  stroke(255, 255, 255);     
+  strokeWeight(this.w(0.001)); 
 
   for (let radius = 0.05; radius < 0.7; radius += 0.01) {
-    const circle = makeCircle(20, radius);
-    const distortedCircle = distortPolygon(circle);
-    const smoothCircle = chaikin(distortedCircle, 4);
+    const circle = this.makeCircle(20, radius);
+    const distortedCircle = this.distortPolygon(circle);
+    const smoothCircle = this.chaikin(distortedCircle, 4);
 
     beginShape();
 //  distortedCircle.forEach(point => {
 //    vertex(w(point[0]), h(point[1])); //makeCircle takes points in units between (0,1), which then get scaled into actual pixels on the canvas
 //  });
     smoothCircle.forEach(point => { 
-      vertex(w(point[0]), h(point[1])); //makeCircle takes points in units between (0,1), which then get scaled into actual pixels on the canvas
+      vertex(this.w(point[0]), this.h(point[1])); //makeCircle takes points in units between (0,1), which then get scaled into actual pixels on the canvas
     });
     endShape(CLOSE); // connects the last point back to the first point
     //creates a polygon for each pass of the for loop, therefore it creates multiple concentric polygons
   }
+}
 }
