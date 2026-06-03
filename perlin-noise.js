@@ -1,7 +1,14 @@
 class PerlinNoise {
+
   constructor() {
-    
+    this.circles = [];
+    //for (let radius = 0.05; radius < 0.7; radius += 0.01)
+    for (let radius = 0.5; radius < 20; radius += 0.5) {
+     const circle = this.makeCircle(20, radius);
+     this.circles.push(circle);
+  }  
   }
+
 //fallback for when it's called with no argument
  w(val) { //converts the units (0-1) into pixels for the canvas size
   if (val == null)
@@ -34,20 +41,20 @@ class PerlinNoise {
       const y = point[1];
       const distance = dist(0.5, 0.5, x, y);
 
-      const z = frameCount / 500; //animates the shape
+      const z = frameCount / 100; //animates the shape
       const z2 = frameCount / 200;
 
       const noiseFn = (x, y) => {
 
         //shifting the coordinates because otherwise the noise function will become 0 when x or y are whole numbers
-        const noiseX = (x + 0.31) * distance * 2 + z2;
-        const noiseY = (y - 1.73) * distance * 2 + z2;
+        const noiseX = (x + 0.31) * distance * 4 + z2;
+        const noiseY = (y - 1.73) * distance * 4 + z2;
         return noise(noiseX, noiseY, z);
       }
 
       const theta = noiseFn(x, y) * Math.PI * 3; //mapping the output of the noise function to an angle. If it's 2Pi, it means the noise rotates along one circle. 3Pi means 1.5 circles.
 
-      const amountToNudge = 0.08 - (Math.cos(frameCount / 500) * 0.08); //the amount oscillates over time - near 0 means perfect circles, further away is distorted. the amount is never negative
+      const amountToNudge = 0.09 - (Math.cos(frameCount / 100) * 0.08); //the amount oscillates over time - near 0 means perfect circles, further away is distorted. the amount is never negative
       const newX = x + (amountToNudge * Math.cos(theta)); //nudge each vertex of the polygon to a new point based on the angle
       const newY = y + (amountToNudge * Math.sin(theta));
 
@@ -83,16 +90,15 @@ class PerlinNoise {
   noFill();             
   stroke(255, 255, 255);     
   strokeWeight(this.w(0.001)); 
+  let j=0;
 
-  for (let radius = 0.05; radius < 0.7; radius += 0.01) {
-    const circle = this.makeCircle(20, radius);
-    const distortedCircle = this.distortPolygon(circle);
+  for (let radius = 0.5; radius < 20; radius += 0.5) {
+   // const circle = this.makeCircle(20, radius);
+    const distortedCircle = this.distortPolygon(this.circles[j]);
     const smoothCircle = this.chaikin(distortedCircle, 4);
-
+    j++;
     beginShape();
-//  distortedCircle.forEach(point => {
-//    vertex(w(point[0]), h(point[1])); //makeCircle takes points in units between (0,1), which then get scaled into actual pixels on the canvas
-//  });
+
     smoothCircle.forEach(point => { 
       vertex(this.w(point[0]), this.h(point[1])); //makeCircle takes points in units between (0,1), which then get scaled into actual pixels on the canvas
     });

@@ -27,7 +27,6 @@ function setup() {
   planetRadius = new PlanetRadiusSlider();
   planets = new Planets(planetTextures, planetSpread, planetRadius);
   rocket = new Rocket(0, 0, 0, rocketFlame, planetSpread);
-  //orbits = new PerlinNoise();
 }
 
 function draw() {
@@ -40,7 +39,6 @@ function draw() {
   rocket.display();
 
   planets.display(rocket.position);
-  //orbits.backgroundCircles();
 }
 
 function windowResized() {
