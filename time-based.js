@@ -33,6 +33,9 @@ class TimeBasedPlanet {
     // This hidden graphics layer becomes the plasma texture
     this.plasmaTexture = createGraphics(256, 256);
     this.plasmaTexture.pixelDensity(1);
+
+    // Fix: Reproduce the independent off-screen texture layer of the first version
+    this.plasmaTexture.noStroke();
   }
 
   getSize() {
@@ -92,6 +95,9 @@ class TimeBasedPlanet {
     // Move to this planet's position before drawing
     translate(this.x, this.y, this.z);
 
+    // fix1
+    noStroke();
+
     // Draw a different version of the planet depending on its current state
     if (this.state === "normal") {
       this.drawNormalPlanet();
@@ -114,7 +120,13 @@ class TimeBasedPlanet {
     }
 
     pop();
+
+    // Fix: After finishing painting your planet, immediately throw an empty ordinary material
+    push();
+    ambientMaterial(255);
+    pop();
   }
+
 
   startWarning() {
     this.state = "warning";
@@ -264,6 +276,10 @@ class TimeBasedPlanet {
   drawPlasmaPlanet() {
     let size = this.getSize();
 
+    //Fix3
+    let elapsed = millis() - this.stateStartTime;
+    let progress = constrain(elapsed / 2500, 0, 1);
+
     // Slight breathing motion after the explosion
     let pulse = sin(frameCount * 0.08);
     let scaleAmount = map(pulse, -1, 1, 0.98, 1.05);
@@ -283,19 +299,17 @@ class TimeBasedPlanet {
   }
 
   drawPlasmaGlow(size) {
+    push();
+    noFill();
+
     // Make the glow gently fade in and out
     let alpha = map(sin(frameCount * 0.08), -1, 1, 60, 140);
 
-    push();
-
-    noFill();
     stroke(255, 80, 180, alpha);
     strokeWeight(4);
 
     rotateX(HALF_PI);
     ellipse(0, 0, size * 2.7);
-
-    noStroke();
     pop();
 
     push();
@@ -307,7 +321,6 @@ class TimeBasedPlanet {
     rotateY(HALF_PI);
     ellipse(0, 0, size * 2.4);
 
-    noStroke();
     pop();
   }
 

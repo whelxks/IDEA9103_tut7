@@ -34,11 +34,12 @@ function setup() {
 }
 
 function draw() {
-  background(0, 0, 0);
+  background(15, 5, 35);
 
   // setup lighting
-  ambientLight(100);
+  ambientLight(90);
   pointLight(255,255,255,0,-200,400);
+  pointLight(255,180,180,0,-300,400);
 
   orbits.backgroundCircles();
   orbitControl();
