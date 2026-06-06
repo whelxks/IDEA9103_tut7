@@ -6,6 +6,9 @@ let rocket;
 
 let planetTextures = [];
 
+// A variable for time-based planet
+let explodingPlanet;
+
 function preload() {
   ["mercury", "neptune", "venus", "mars", "jupiter"].forEach((name) => {
     planetTextures.push(loadImage(`assets/planet_textures/${name}.jpg`));
@@ -26,10 +29,17 @@ function setup() {
   planets = new Planets(planetTextures, planetSpread, planetRadius);
   rocket = new Rocket(0, 0, 0, rocketFlame, planetSpread);
 
+  // Instatiate the timebased planet
+  explodingPlanet = new TimeBasedPlanet(200,0,-100,planetRadius);
 }
 
 function draw() {
   background(0, 0, 0);
+
+  // setup lighting
+  ambientLight(100);
+  pointLight(255,255,255,0,-200,400);
+
   orbits.backgroundCircles();
   orbitControl();
   rocket.move();
@@ -37,6 +47,9 @@ function draw() {
 
   planets.display(rocket.position);
   
+  // Update state and draw new planet
+  explodingPlanet.update();
+  explodingPlanet.display();
 }
 
 function windowResized() {
