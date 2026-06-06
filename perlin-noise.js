@@ -2,9 +2,8 @@ class PerlinNoise {
 
   constructor() {
     this.circles = [];
-    //for (let radius = 0.05; radius < 0.7; radius += 0.01)
-    for (let radius = 0.5; radius < 20; radius += 0.5) {
-     const circle = this.makeCircle(20, radius);
+    for (let radius = 0.5; radius < 20; radius += 0.4) {
+     const circle = this.makeCircle(15, radius);
      this.circles.push(circle);
   }  
   }
@@ -77,25 +76,21 @@ class PerlinNoise {
   return num === 1 ? smooth : this.chaikin(smooth, num - 1);
 }
 
-/*function setup() {
-  createCanvas(1536, 775);
-
-  colorMode(HSB, 360, 100, 100, 1.0);
-}
-*/
-
  backgroundCircles() {
   //black background with a light grey stroke for the circles
   background(0, 0, 0);  
   noFill();             
   stroke(255, 255, 255);     
   strokeWeight(this.w(0.001)); 
+
   let j=0;
 
-  for (let radius = 0.5; radius < 20; radius += 0.5) {
-   // const circle = this.makeCircle(20, radius);
+  for (let radius = 0.5; radius < 20; radius += 0.4) {
     const distortedCircle = this.distortPolygon(this.circles[j]);
     const smoothCircle = this.chaikin(distortedCircle, 4);
+
+    strokeWeight(j * 0.5); //each circle gets a thicker stroke
+
     j++;
     beginShape();
 
