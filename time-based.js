@@ -1,90 +1,165 @@
-// =====================================================
-// Time-based planet explosion
-// My mechanic: the planet changes over time:
-// normal → warning → exploding → plasma → recovering
-// =====================================================
+/*
+AI acknowledgement:
+ChatGPT was used to help translate reference images and written effect descriptions
+into an OOP p5.js time-based mechanic. The code was reviewed, edited, and tested
+before use.
+
+Outside-course reference note:
+The parts checked with the official p5.js reference are:
+- p5.Vector.random3D(): creates a random 3D direction.
+  Source: https://p5js.org/reference/p5.Vector/random3D/
+- sphere(): draws a 3D sphere in WEBGL.
+  Source: https://p5js.org/reference/p5/sphere/
+*/
+
+// Manages multiple time-based particle planets.
+// Each planet has its own position, size, and explosion timing.
+class TimeBasedPlanetSystem {
+  constructor(amount, planetRadius) {
+    this.planets = [];
+
+    // Connects this system to the shared planet radius slider.
+    this.planetRadius = planetRadius;
+
+    this.createPlanets(amount);
+  }
+
+  createPlanets(amount) {
+    for (let i = 0; i < amount; i++) {
+      // Random 3D position for each particle planet.
+      let x = random(-650, 650);
+      let y = random(-350, 350);
+      let z = random(-650, 150);
+
+      let particleCount = 180;
+
+      // Different timing makes the explosions feel less repetitive.
+      let cycleInterval = random(3500, 7000);
+
+      // Staggers the first explosion so planets do not all explode together.
+      let startDelay = random(0, 5000);
+
+      // Keeps variation while still using the shared radius slider.
+      let radiusScale = random(0.35, 0.85);
+
+      let newPlanet = new TimeBasedPlanet(
+        x,
+        y,
+        z,
+        this.planetRadius,
+        particleCount,
+        cycleInterval,
+        startDelay,
+        radiusScale
+      );
+
+      this.planets.push(newPlanet);
+    }
+  }
+
+  update() {
+    for (let planet of this.planets) {
+      planet.update();
+    }
+  }
+
+  display() {
+    for (let planet of this.planets) {
+      planet.display();
+    }
+  }
+}
 
 class TimeBasedPlanet {
-  constructor(x, y, z, planetRadius) {
-    // Save where the planet is placed in 3D space
+  constructor(
+    x,
+    y,
+    z,
+    planetRadius,
+    particleCount = 260,
+    cycleInterval = 3500,
+    startDelay = 0,
+    radiusScale = 1
+  ) {
+    // Position in 3D space.
     this.x = x;
     this.y = y;
     this.z = z;
 
-    // Use the shared planet radius slider from the main sketch
     this.planetRadius = planetRadius;
+    this.radiusScale = radiusScale;
 
-    // The planet starts calm
-    this.state = "normal";
-
-    // These help me track how long each stage lasts
-    this.stateStartTime = millis();
-    this.lastTriggerTime = millis();
-
-    // Wait 4 seconds before the planet starts reacting
-    this.triggerInterval = 4000;
-
-    // Used for the expanding explosion ring
-    this.explosionRadius = 0;
-
-    // Explosion particles will be stored here
+    this.particleCount = particleCount;
     this.particles = [];
 
-    // This hidden graphics layer becomes the plasma texture
-    this.plasmaTexture = createGraphics(256, 256);
-    this.plasmaTexture.pixelDensity(1);
+    // Current stage of the timed cycle.
+    this.state = "forming";
 
-    // Fix: Reproduce the independent off-screen texture layer of the first version
-    this.plasmaTexture.noStroke();
+    // Tracks when the current state began.
+    this.stateStartTime = millis();
+
+    // Adds a delay before the first explosion cycle.
+    this.lastCycleTime = millis() + startDelay;
+
+    this.cycleInterval = cycleInterval;
+
+    // Offset values used during the warning shake.
+    this.shakeOffsetX = 0;
+    this.shakeOffsetY = 0;
+    this.shakeOffsetZ = 0;
+
+    this.createParticles();
   }
 
-  getSize() {
-    // Get the current planet size from the shared slider
-    return this.planetRadius.value();
+  getRadius() {
+    // Keeps the effect connected to the shared planet radius slider.
+    return this.planetRadius.value() * this.radiusScale;
+  }
+
+  createParticles() {
+    this.particles = [];
+
+    for (let i = 0; i < this.particleCount; i++) {
+      this.particles.push(new PlanetExplosionParticle());
+    }
   }
 
   update() {
     let now = millis();
+
+    // Controls how long the planet stays in the current state.
     let elapsed = now - this.stateStartTime;
 
-    // After staying normal for a while, the planet enters warning mode
-    if (this.state === "normal" && now - this.lastTriggerTime > this.triggerInterval) {
-      this.startWarning();
-    }
+    // Timed sequence: forming -> shaking -> exploding -> scattered -> reforming.
+    if (this.state === "forming") {
+      this.updateFormingState();
 
-    // Warning is a short build-up before the explosion
-    if (this.state === "warning") {
-      if (elapsed > 1000) {
+      if (now - this.lastCycleTime > this.cycleInterval) {
+        this.startShaking();
+      }
+    } else if (this.state === "shaking") {
+      this.updateShakingState();
+
+      if (elapsed > 800) {
         this.startExplosion();
       }
-    }
-
-    // During the explosion, the ring expands and particles fly out
-    else if (this.state === "exploding") {
-      this.explosionRadius += 7;
-
-      for (let particle of this.particles) {
-        particle.update();
-      }
+    } else if (this.state === "exploding") {
+      this.updateExplodingState();
 
       if (elapsed > 1200) {
-        this.startPlasma();
+        this.startScattered();
       }
-    }
+    } else if (this.state === "scattered") {
+      this.updateScatteredState();
 
-    // Plasma stage keeps updating the animated texture
-    else if (this.state === "plasma") {
-      this.updatePlasmaTexture();
-
-      if (elapsed > 2500) {
-        this.startRecovery();
+      if (elapsed > 1000) {
+        this.startReforming();
       }
-    }
+    } else if (this.state === "reforming") {
+      this.updateReformingState();
 
-    // Recovery brings the planet back to normal
-    else if (this.state === "recovering") {
-      if (elapsed > 1200) {
-        this.resetPlanet();
+      if (elapsed > 1400) {
+        this.resetToForming();
       }
     }
   }
@@ -92,401 +167,259 @@ class TimeBasedPlanet {
   display() {
     push();
 
-    // Move to this planet's position before drawing
-    translate(this.x, this.y, this.z);
+    translate(
+      this.x + this.shakeOffsetX,
+      this.y + this.shakeOffsetY,
+      this.z + this.shakeOffsetZ
+    );
 
-    // fix1
     noStroke();
 
-    // Draw a different version of the planet depending on its current state
-    if (this.state === "normal") {
-      this.drawNormalPlanet();
-    }
+    this.drawPlanetGlow();
+    this.drawParticles();
 
-    else if (this.state === "warning") {
-      this.drawWarningPlanet();
-    }
-
-    else if (this.state === "exploding") {
-      this.drawExplosion();
-    }
-
-    else if (this.state === "plasma") {
-      this.drawPlasmaPlanet();
-    }
-
-    else if (this.state === "recovering") {
-      this.drawRecoveringPlanet();
-    }
-
-    pop();
-
-    // Fix: After finishing painting your planet, immediately throw an empty ordinary material
-    push();
-    ambientMaterial(255);
     pop();
   }
 
+  updateFormingState() {
+    this.shakeOffsetX = 0;
+    this.shakeOffsetY = 0;
+    this.shakeOffsetZ = 0;
 
-  startWarning() {
-    this.state = "warning";
+    let radius = this.getRadius();
+
+    for (let particle of this.particles) {
+      particle.updateHomePosition(radius);
+
+      // Subtle drift stops the planet from looking completely static.
+      let driftX = sin(frameCount * 0.02 + particle.home.x * 0.05) * 0.4;
+      let driftY = cos(frameCount * 0.02 + particle.home.y * 0.05) * 0.4;
+      let driftZ = sin(frameCount * 0.015 + particle.home.z * 0.05) * 0.4;
+
+      let target = p5.Vector.add(
+        particle.home,
+        createVector(driftX, driftY, driftZ)
+      );
+
+      // Pulls each particle back toward its home position.
+      let toHome = p5.Vector.sub(target, particle.pos);
+      toHome.mult(0.08);
+
+      particle.vel.add(toHome);
+      particle.vel.mult(0.82);
+      particle.pos.add(particle.vel);
+
+      particle.life = 255;
+    }
+  }
+
+  updateShakingState() {
+    // Warning shake before the explosion event.
+    this.shakeOffsetX = random(-4, 4);
+    this.shakeOffsetY = random(-4, 4);
+    this.shakeOffsetZ = random(-4, 4);
+
+    let radius = this.getRadius();
+
+    for (let particle of this.particles) {
+      particle.updateHomePosition(radius);
+
+      let toHome = p5.Vector.sub(particle.home, particle.pos);
+      toHome.mult(0.06);
+
+      particle.vel.add(toHome);
+      particle.vel.mult(0.85);
+      particle.pos.add(particle.vel);
+    }
+  }
+
+  updateExplodingState() {
+    this.shakeOffsetX = 0;
+    this.shakeOffsetY = 0;
+    this.shakeOffsetZ = 0;
+
+    for (let particle of this.particles) {
+      particle.pos.add(particle.vel);
+      particle.vel.mult(0.99);
+      particle.life -= 2;
+    }
+  }
+
+  updateScatteredState() {
+    for (let particle of this.particles) {
+      particle.pos.add(particle.vel);
+      particle.vel.mult(0.985);
+      particle.life -= 1.5;
+    }
+  }
+
+  updateReformingState() {
+    let radius = this.getRadius();
+
+    for (let particle of this.particles) {
+      particle.updateHomePosition(radius);
+
+      // Pulls scattered particles back into the planet shape.
+      let toHome = p5.Vector.sub(particle.home, particle.pos);
+      toHome.mult(0.04);
+
+      particle.vel.add(toHome);
+      particle.vel.mult(0.9);
+      particle.pos.add(particle.vel);
+
+      particle.life += 3;
+      particle.life = constrain(particle.life, 0, 255);
+    }
+  }
+
+  startShaking() {
+    this.state = "shaking";
     this.stateStartTime = millis();
   }
 
   startExplosion() {
-    let size = this.getSize();
-
     this.state = "exploding";
     this.stateStartTime = millis();
 
-    // Start the explosion ring slightly outside the planet
-    this.explosionRadius = size * 1.5;
+    for (let particle of this.particles) {
+      let dir = particle.pos.copy();
 
-    // Rebuild the particle list each time the planet explodes
-    this.particles = [];
+      if (dir.mag() < 0.01) {
+        // Outside course: random3D() gives a random 3D direction when the centre direction is unclear.
+        dir = p5.Vector.random3D();
+      } else {
+        dir.normalize();
+      }
 
-    for (let i = 0; i < 45; i++) {
-      this.particles.push(new ExplosionParticle());
+      // Outside course: random3D() adds uneven 3D spread so the burst does not look too perfect.
+      let randomSpread = p5.Vector.random3D().mult(random(0.5, 2.5));
+      let outward = dir.mult(random(3, 8)).add(randomSpread);
+
+      particle.vel = outward;
     }
   }
 
-  startPlasma() {
-    this.state = "plasma";
-    this.stateStartTime = millis();
-
-    // The burst is finished, so I clear the particles
-    this.particles = [];
-  }
-
-  startRecovery() {
-    this.state = "recovering";
+  startScattered() {
+    this.state = "scattered";
     this.stateStartTime = millis();
   }
 
-  resetPlanet() {
-    // Reset everything so the cycle can happen again
-    this.state = "normal";
+  startReforming() {
+    this.state = "reforming";
     this.stateStartTime = millis();
-    this.lastTriggerTime = millis();
-
-    this.explosionRadius = 0;
-    this.particles = [];
   }
 
-  drawNormalPlanet() {
-    let size = this.getSize();
-
-    push();
-
-    // A slow rotation makes the planet feel less static
-    rotateY(frameCount * 0.01);
-
-    ambientMaterial(80, 160, 255);
-    sphere(size);
-
-    pop();
+  resetToForming() {
+    this.state = "forming";
+    this.stateStartTime = millis();
+    this.lastCycleTime = millis();
   }
 
-  drawWarningPlanet() {
-    let size = this.getSize();
+  drawPlanetGlow() {
+    let radius = this.getRadius();
 
-    // Small random movement creates the warning shake
-    let shake = 5;
-    let shakeX = random(-shake, shake);
-    let shakeY = random(-shake, shake);
+    if (this.state === "forming" || this.state === "shaking") {
+      push();
+      noFill();
+      stroke(90, 130, 255, 80);
+      strokeWeight(2);
 
-    // Pulse the planet before it explodes
-    let pulse = sin(frameCount * 0.45);
-    let scaleAmount = map(pulse, -1, 1, 1.0, 1.18);
+      // Rotates the glow ring so it sits around the 3D particle planet.
+      rotateX(HALF_PI);
+      ellipse(0, 0, radius * 2.4);
+      pop();
 
-    push();
+      push();
+      noFill();
+      stroke(255, 220, 180, 55);
+      strokeWeight(2);
 
-    translate(shakeX, shakeY, 0);
-    scale(scaleAmount);
+      // Rotates the second glow ring in a different direction for depth.
+      rotateY(HALF_PI);
+      ellipse(0, 0, radius * 1.8);
+      pop();
+    }
 
-    // Red colour suggests danger / instability
-    emissiveMaterial(255, 60, 80);
-    sphere(size);
+    if (this.state === "exploding") {
+      push();
+      noFill();
+      stroke(255, 160, 90, 130);
+      strokeWeight(4);
 
-    pop();
+      // Larger ring makes the explosion state easier to read.
+      rotateX(HALF_PI);
+      ellipse(0, 0, radius * 2.8);
+      pop();
 
-    this.drawWarningRing(size);
+      push();
+      noFill();
+      stroke(255, 80, 60, 90);
+      strokeWeight(3);
+
+      // Second explosion ring adds a stronger 3D burst feeling.
+      rotateY(HALF_PI);
+      ellipse(0, 0, radius * 3.4);
+      pop();
+    }
   }
 
-  drawWarningRing(size) {
-    push();
-
-    noFill();
-    stroke(255, 80, 120);
-    strokeWeight(3);
-
-    // Rotate the ellipse so it reads like a ring around the planet
-    rotateX(HALF_PI);
-    ellipse(0, 0, size * 2.8);
-
-    noStroke();
-    pop();
-  }
-
-  drawExplosion() {
-    let size = this.getSize();
-
-    push();
-
-    // Bright core left after the planet bursts
-    emissiveMaterial(255, 90, 40);
-    sphere(size * 0.65);
-
-    pop();
-
-    this.drawExplosionRings();
-
+  drawParticles() {
     for (let particle of this.particles) {
       particle.display();
     }
   }
-
-  drawExplosionRings() {
-    push();
-
-    noFill();
-    stroke(255, 90, 60, 200);
-    strokeWeight(5);
-
-    rotateX(HALF_PI);
-    ellipse(0, 0, this.explosionRadius);
-
-    noStroke();
-    pop();
-
-    push();
-
-    noFill();
-    stroke(255, 220, 120, 140);
-    strokeWeight(3);
-
-    // A second ring in another direction makes the explosion feel more 3D
-    rotateY(HALF_PI);
-    ellipse(0, 0, this.explosionRadius * 0.75);
-
-    noStroke();
-    pop();
-  }
-
-  drawPlasmaPlanet() {
-    let size = this.getSize();
-
-    //Fix3
-    let elapsed = millis() - this.stateStartTime;
-    let progress = constrain(elapsed / 2500, 0, 1);
-
-    // Slight breathing motion after the explosion
-    let pulse = sin(frameCount * 0.08);
-    let scaleAmount = map(pulse, -1, 1, 0.98, 1.05);
-
-    push();
-
-    rotateY(frameCount * 0.012);
-    scale(scaleAmount);
-
-    // Use the generated texture as the planet surface
-    texture(this.plasmaTexture);
-    sphere(size * 1.05);
-
-    pop();
-
-    this.drawPlasmaGlow(size);
-  }
-
-  drawPlasmaGlow(size) {
-    push();
-    noFill();
-
-    // Make the glow gently fade in and out
-    let alpha = map(sin(frameCount * 0.08), -1, 1, 60, 140);
-
-    stroke(255, 80, 180, alpha);
-    strokeWeight(4);
-
-    rotateX(HALF_PI);
-    ellipse(0, 0, size * 2.7);
-    pop();
-
-    push();
-
-    noFill();
-    stroke(120, 180, 255, 80);
-    strokeWeight(2);
-
-    rotateY(HALF_PI);
-    ellipse(0, 0, size * 2.4);
-
-    pop();
-  }
-
-  updatePlasmaTexture() {
-    // Edit the hidden texture pixel by pixel
-    this.plasmaTexture.loadPixels();
-
-    let t = millis() * 0.0008;
-
-    for (let y = 0; y < this.plasmaTexture.height; y++) {
-      for (let x = 0; x < this.plasmaTexture.width; x++) {
-        let nx = x * 0.025;
-        let ny = y * 0.025;
-
-        // Layered noise gives the plasma a more organic surface
-        let n1 = noise(nx, ny, t);
-        let n2 = noise(nx * 2.2 + 20, ny * 2.2, t * 1.4);
-        let n3 = noise(nx * 4.0, ny * 4.0 + 40, t * 0.8);
-
-        let n = n1 * 0.55 + n2 * 0.3 + n3 * 0.15;
-
-        // Make the texture stronger near the centre
-        let dx = x - this.plasmaTexture.width / 2;
-        let dy = y - this.plasmaTexture.height / 2;
-        let d = sqrt(dx * dx + dy * dy);
-
-        let radial = map(d, 0, this.plasmaTexture.width / 2, 1.2, 0.2);
-        radial = constrain(radial, 0, 1);
-
-        let heat = n * radial;
-
-        // Convert the heat value into a thermal colour
-        let c = this.getThermalColor(heat);
-
-        // Each pixel has 4 values: red, green, blue, alpha
-        let index = 4 * (x + y * this.plasmaTexture.width);
-
-        this.plasmaTexture.pixels[index + 0] = red(c);
-        this.plasmaTexture.pixels[index + 1] = green(c);
-        this.plasmaTexture.pixels[index + 2] = blue(c);
-        this.plasmaTexture.pixels[index + 3] = 255;
-      }
-    }
-
-    this.plasmaTexture.updatePixels();
-
-    // Softens the plasma so it looks less pixelated
-    this.plasmaTexture.filter(BLUR, 2);
-  }
-
-  getThermalColor(v) {
-    v = constrain(v, 0, 1);
-
-    // Low heat: blue to purple
-    if (v < 0.25) {
-      return lerpColor(
-        color(60, 120, 255),
-        color(180, 120, 255),
-        v / 0.25
-      );
-    }
-
-    // Medium-low heat: purple to pink
-    else if (v < 0.5) {
-      return lerpColor(
-        color(180, 120, 255),
-        color(255, 60, 160),
-        (v - 0.25) / 0.25
-      );
-    }
-
-    // Medium-high heat: pink to orange
-    else if (v < 0.75) {
-      return lerpColor(
-        color(255, 60, 160),
-        color(255, 120, 40),
-        (v - 0.5) / 0.25
-      );
-    }
-
-    // High heat: orange to pale yellow
-    else {
-      return lerpColor(
-        color(255, 120, 40),
-        color(255, 230, 160),
-        (v - 0.75) / 0.25
-      );
-    }
-  }
-
-  drawRecoveringPlanet() {
-    let size = this.getSize();
-
-    let elapsed = millis() - this.stateStartTime;
-
-    // Progress goes from 0 to 1 during recovery
-    let progress = constrain(elapsed / 1200, 0, 1);
-
-    // The planet shrinks gently back to its normal size
-    let currentSize = map(progress, 0, 1, size * 1.05, size);
-
-    push();
-
-    rotateY(frameCount * 0.01);
-    scale(currentSize / size);
-
-    ambientMaterial(80, 160, 255);
-    sphere(size);
-
-    pop();
-
-    push();
-
-    noFill();
-
-    // The recovery ring fades out as the planet stabilises
-    stroke(255, 150, 180, 100 * (1 - progress));
-    strokeWeight(3);
-
-    rotateX(HALF_PI);
-    ellipse(0, 0, size * 3 * (1 - progress));
-
-    noStroke();
-    pop();
-  }
 }
 
-
-// =====================================================
-// Explosion particle
-// Each particle is one small glowing piece from the explosion.
-// =====================================================
-
-class ExplosionParticle {
+class PlanetExplosionParticle {
   constructor() {
-    // Start at the centre of the planet
+    // Outside course: random3D() helps place particles inside a 3D planet shape.
+    this.homeUnit = p5.Vector.random3D().mult(pow(random(), 1 / 3));
+
+    this.home = createVector(0, 0, 0);
     this.pos = createVector(0, 0, 0);
+    this.vel = createVector(0, 0, 0);
 
-    // Fly out in a random 3D direction
-    this.vel = p5.Vector.random3D().mult(random(2, 8));
-
-    this.size = random(3, 8);
-
-    // Life also controls the fade-out
+    this.size = random(2, 5);
     this.life = 255;
+
+    this.col = this.randomPlanetColor();
   }
 
-  update() {
-    // Move outward every frame
-    this.pos.add(this.vel);
+  updateHomePosition(radius) {
+    this.home = p5.Vector.mult(this.homeUnit, radius);
 
-    // Slowly fade out
-    this.life -= 6;
+    if (this.pos.mag() === 0) {
+      this.pos = this.home.copy();
+    }
+  }
+
+  randomPlanetColor() {
+    let palette = [
+      color(245, 235, 220),
+      color(215, 200, 185),
+      color(234, 120, 78),
+      color(112, 145, 235),
+      color(70, 90, 160),
+      color(155, 110, 90)
+    ];
+
+    return random(palette);
   }
 
   display() {
-    if (this.life > 0) {
-      push();
-
-      translate(this.pos.x, this.pos.y, this.pos.z);
-
-      // Use life as alpha, so the particle disappears naturally
-      emissiveMaterial(255, 160, 80, this.life);
-      sphere(this.size);
-
-      pop();
+    if (this.life <= 0) {
+      return;
     }
+
+    push();
+
+    translate(this.pos.x, this.pos.y, this.pos.z);
+
+    fill(red(this.col), green(this.col), blue(this.col), this.life);
+
+    // Outside course: sphere() draws each particle as a small 3D WEBGL shape.
+    sphere(this.size, 5, 4);
+
+    pop();
   }
 }

@@ -6,8 +6,8 @@ let rocket;
 
 let planetTextures = [];
 
-// A variable for time-based planet
-let explodingPlanet;
+// This will control all time-based exploding planets
+let timeBasedPlanetSystem;
 
 function preload() {
   ["mercury", "neptune", "venus", "mars", "jupiter"].forEach((name) => {
@@ -29,8 +29,8 @@ function setup() {
   planets = new Planets(planetTextures, planetSpread, planetRadius);
   rocket = new Rocket(0, 0, 0, rocketFlame, planetSpread);
 
-  // Instatiate the timebased planet
-  explodingPlanet = new TimeBasedPlanet(200,0,-100,planetRadius);
+  // Create time-based planet.
+  timeBasedPlanetSystem = new TimeBasedPlanetSystem(12, planetRadius);
 }
 
 function draw() {
@@ -48,9 +48,9 @@ function draw() {
 
   planets.display(rocket.position);
   
-  // Update state and draw new planet
-  explodingPlanet.update();
-  explodingPlanet.display();
+  // Update and display all time-based planets
+  timeBasedPlanetSystem.update();
+  timeBasedPlanetSystem.display();
 }
 
 function windowResized() {
