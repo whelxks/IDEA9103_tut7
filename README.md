@@ -52,13 +52,28 @@ This mechanic supports the vision of Cosmic Drift by keeping the universe alive 
 
 ### 🌊 Perlin Noise & Randomness — [Nandhini Iyengar]
 
-**Background Effects**
+**Background of the Scene**
 
-The Perlin noise mechanic generates the living, breathing background of the scene — a flowing star field driven by a 2D Perlin noise flow field (inspired by the [p5.js Perlin noise flow field example](https://p5js.org/examples/simulate-noise/)). A lot of small particles are seeded across the canvas using `random()` with a fixed or user-adjustable `randomSeed()`. Each particle follows a velocity vector sampled from `noise(x, y, time)`, creating fluid trails that evoke nebulae.
+Perlin noise is used to create the background of the artwork. Since it is outer space, I was inspired by the orbits of planets, and wanted to create something that subtly moved. My code can be understood by looking at it through the following steps - 
 
-Shooting stars are layered on top and triggered at random intervals using `random()`, with their trajectories also influenced by the noise field to feel consistent with the ambient flow.
+1. Creating concentric circles at first, which are actually polygons that are created by spacing the points evenly
+2. Distorting the circles using the noise function - each point is shifted using the noise function, and moved based on a fixed trigonometric formula, which makes the shift similar across all of the concentric circles
+3. Using Chaikin’s algorithm to smooth out the points of the polygons, turning them into smoother curves
+4. Distorting and smoothing the circles point by point, by calling the above functions for each point
 
-The `randomSeed()` value is exposed as a parameter (optionally mapped to user input), meaning two sessions can look entirely different. The combination of Perlin noise for smooth, coherent structure and `random()` for unpredictable event placement creates a background that is simultaneously ordered and chaotic — mirroring the dual nature of space itself. This mechanic forms the visual ground that all other mechanics play on top of, giving the piece spatial and aesthetic cohesion.
+I used white colour for the orbits and didn’t go for colourful gradient patterns because it was looking chaotic when combined with the already colourful planets scene. Instead, I increased the thickness of each circle to add a further bit of variation.
+
+**Interaction** - You can zoom in and out using the mouse wheel to see the concentric circles. The longer you wait, the more movement you can see across the circles. The more you zoom out, you can see the thickness of each circle increasing.
+
+Further explanation of the logic - 
+
+Cosine is for how far left or right each point can be, and sine is for how far up or down it can be. Through each angle around the circle, cos and sin calculate where each point should go, and collect all of them into an array. This process repeats for every ring, with each ring being slightly larger than the last.
+
+For each point on each ring, the value from the noise function to calculate an angle. It then nudges the point a small distance in the direction of that angle. The circles move between being almost perfect circles and being distorted. 
+
+Chaikin's algorithm is used to fix the angular appearance of the polygons by slicing off the corners of the polygon and replacing it with two new points that sit closer to the middle of each edge. Each time this is applied the shape becomes rounder and smoother. This is applied 4 times per circle, which makes the result look like a smooth circle rather than a polygon. 
+
+My code was inspired by https://www.generativehut.com/post/recreating-the-noise-orbit. It instantly reminded me of outer space and black holes, and while it is meant to be a powerful, more detailed animation and was lagging a lot, I tried to simplify it and make it fit as a background for our canvas. I used Claude to help understand and explain to me exactly how this works step by step, especially with the trigonometric functions.
 
 ---
 
