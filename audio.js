@@ -1,232 +1,77 @@
 // =====================================================
-// Cosmic Drift - Audio Mechanic
+// Cosmic Drift - Stable Audio Module
 // Owner: Teeno
 // Purpose:
-// Use microphone input to generate an audioCraziness value.
-// This value can control planet shaking, pulsing, wobbling,
-// glow intensity, orbit distortion, and background energy.
+// Microphone input controls planet wobble, pulse and glow.
+// This version is designed to work with the existing planets.js.
 // =====================================================
 
 
 // -------------------------
-// Global audio variables
+// Audio variables
 // -------------------------
 
-let mic;
-let amplitude;
-
-// Raw microphone volume.
-// Usually ranges from 0.0 to around 0.3 depending on the microphone.
-let audioVolume = 0;
-
-// Smoothed volume makes the visual response less jumpy.
-let smoothedAudioVolume = 0;
-
-// Main shared audio parameter.
-// Keep this value between 0 and 1.
-// Other group members can use this variable directly.
-let audioCraziness = 0;
-
-// Optional value for sudden loud sound detection,
-// such as clapping or shouting.
-let audioPeak = 0;
-
-// Whether the microphone has started.
+let audioMic = null;
 let audioStarted = false;
 
+let audioVolume = 0;
+let smoothedAudioVolume = 0;
+let audioCraziness = 0;
+let audioPeak = 0;
+
 
 // -------------------------
-// Unified audio parameters
+// Audio settings
 // -------------------------
 
-const AUDIO_SETTINGS = {
-  minVolume: 0.002,
-  maxVolume: 0.045,
-  smoothing: 0.65,
-  maxShake: 300,
-  maxPulse: 0.8,
-  maxGlowBoost: 180,
-  wobbleSpeed: 0.06,
+const TEENO_AUDIO_SETTINGS = {
+  // Lower = more sensitive to quiet sound
+  minVolume: 0.01,
+
+  // Lower = small sound creates strong reaction
+  maxVolume: 0.9,
+
+  // Lower = faster response
+  smoothing: 0.8,
+
+  // Planet movement strength
+  maxShake: 400,
+
+  // Planet size pulse strength
+  maxPulse: 2.90,
+
+  // Glow strength
+  maxGlowBoost: 500,
+
+  // Wobble animation speed
+  wobbleSpeed: 0.08,
+
+  // Loud sound peak threshold
   peakThreshold: 0.45,
+
+  // Peak fade speed
   peakDecay: 0.92
 };
 
 
 // =====================================================
-// Setup function
-// Call this once inside setup()
+// Call this inside sketch.js setup()
 // =====================================================
 
 function setupAudio() {
-  mic = new p5.AudioIn();
-  amplitude = new p5.Amplitude();
+  audioMic = new p5.AudioIn();
 
-  // Do not start the microphone here automatically.
-  // Browsers usually require user interaction first.
-  console.log("Audio system ready. Click or press a key to start microphone.");
+  setupAudioButton();
+
+  console.log("Teeno audio system ready.");
 }
 
 
 // =====================================================
-// Start audio function
-// Call this inside mousePressed() or keyPressed()
+// Connect to the HTML microphone button
+// Your index.html already has:
+// <button id="micButton">🎙 Start Microphone</button>
 // =====================================================
-
-function startAudioInput() {
-  if (!audioStarted) {
-    userStartAudio();
-
-    mic.start(() => {
-      amplitude.setInput(mic);
-      audioStarted = true;
-      console.log("Microphone started.");
-    });
-  }
-}
-
-
-// =====================================================
-// Update function
-// Call this once every frame inside draw()
-// =====================================================
-
-function updateAudio() {
-  if (!audioStarted) {
-    audioVolume = 0;
-    smoothedAudioVolume = 0;
-    audioCraziness = 0;
-    audioPeak *= AUDIO_SETTINGS.peakDecay;
-    return;
-  }
-
-  // Get current microphone level.
-  audioVolume = amplitude.getLevel();
-
-  // Smooth the volume to avoid harsh flickering.
-  smoothedAudioVolume =
-    smoothedAudioVolume * AUDIO_SETTINGS.smoothing +
-    audioVolume * (1 - AUDIO_SETTINGS.smoothing);
-
-  // Convert microphone volume into a shared 0-1 value.
-  audioCraziness = map(
-    smoothedAudioVolume,
-    AUDIO_SETTINGS.minVolume,
-    AUDIO_SETTINGS.maxVolume,
-    0,
-    1
-  );
-
-  audioCraziness = constrain(audioCraziness, 0, 1);
-
-  // Detect sudden loud sound.
-  if (audioCraziness > AUDIO_SETTINGS.peakThreshold) {
-    audioPeak = 1;
-  } else {
-    audioPeak *= AUDIO_SETTINGS.peakDecay;
-  }
-}
-
-
-// =====================================================
-// Audio helper functions
-// Other mechanics can use these functions.
-// =====================================================
-
-
-// Returns a smooth 3D wobble offset for a planet.
-// index makes each planet move differently.
-function getAudioWobble(index) {
-  let t = frameCount * AUDIO_SETTINGS.wobbleSpeed;
-
-  let shakeAmount = audioCraziness * AUDIO_SETTINGS.maxShake;
-
-  let x = map(
-    noise(t + index * 10),
-    0,
-    1,
-    -shakeAmount,
-    shakeAmount
-  );
-
-  let y = map(
-    noise(t + index * 20),
-    0,
-    1,
-    -shakeAmount,
-    shakeAmount
-  );
-
-  let z = map(
-    noise(t + index * 30),
-    0,
-    1,
-    -shakeAmount,
-    shakeAmount
-  );
-
-  return createVector(x, y, z);
-}
-
-
-// Returns scale multiplier for planet pulsing.
-function getAudioPulse() {
-  return 1 + audioCraziness * AUDIO_SETTINGS.maxPulse + audioPeak * 0.15;
-}
-
-
-// Returns extra glow value caused by audio.
-function getAudioGlowBoost() {
-  return audioCraziness * AUDIO_SETTINGS.maxGlowBoost + audioPeak * 80;
-}
-
-
-// Returns a value that can be used to distort orbit movement.
-function getAudioOrbitDistortion() {
-  return audioCraziness * 50 + audioPeak * 30;
-}
-
-
-// Optional: returns a simple audio state label.
-// Useful for debugging or showing text on screen.
-function getAudioState() {
-  if (!audioStarted) {
-    return "MIC OFF";
-  }
-
-  if (audioCraziness < 0.2) {
-    return "CALM";
-  } else if (audioCraziness < 0.6) {
-    return "ACTIVE";
-  } else {
-    return "CHAOTIC";
-  }
-}
-
-
-// =====================================================
-// Optional debug display
-// You can call this inside draw() if you want to see values.
-// Because the main project uses WEBGL, this uses resetMatrix()
-// so the text stays on the screen.
-// =====================================================
-
-function drawAudioDebug() {
-  push();
-
-  resetMatrix();
-
-  fill(255);
-  noStroke();
-  textSize(14);
-  textAlign(LEFT, TOP);
-
-  text("Audio State: " + getAudioState(), -width / 2 + 20, -height / 2 + 20);
-  text("Volume: " + nf(audioVolume, 1, 3), -width / 2 + 20, -height / 2 + 40);
-  text("Craziness: " + nf(audioCraziness, 1, 3), -width / 2 + 20, -height / 2 + 60);
-  text("Peak: " + nf(audioPeak, 1, 3), -width / 2 + 20, -height / 2 + 80);
-
-  pop();
-}
 
 function setupAudioButton() {
   const micButton = document.getElementById("micButton");
@@ -240,6 +85,178 @@ function setupAudioButton() {
     startAudioInput();
 
     micButton.innerText = "🎙 Microphone On";
-    micButton.classList.add("active");
+    micButton.style.background = "rgba(60, 180, 120, 0.85)";
+    micButton.style.color = "white";
   });
+}
+
+
+// =====================================================
+// Start microphone
+// =====================================================
+
+function startAudioInput() {
+  if (!audioStarted && audioMic) {
+    userStartAudio();
+
+    audioMic.start(function () {
+      audioStarted = true;
+      console.log("Microphone started.");
+    });
+  }
+}
+
+
+// =====================================================
+// Call this inside sketch.js draw()
+// =====================================================
+
+function updateAudio() {
+  if (!audioStarted || !audioMic) {
+    audioVolume = 0;
+    smoothedAudioVolume = 0;
+    audioCraziness = 0;
+    audioPeak *= TEENO_AUDIO_SETTINGS.peakDecay;
+    return;
+  }
+
+  // IMPORTANT:
+  // Use audioMic.getLevel() directly.
+  // Do NOT use p5.Amplitude here, because it caused AudioWorklet errors.
+  audioVolume = audioMic.getLevel();
+
+  smoothedAudioVolume =
+    smoothedAudioVolume * TEENO_AUDIO_SETTINGS.smoothing +
+    audioVolume * (1 - TEENO_AUDIO_SETTINGS.smoothing);
+
+  audioCraziness = map(
+    smoothedAudioVolume,
+    TEENO_AUDIO_SETTINGS.minVolume,
+    TEENO_AUDIO_SETTINGS.maxVolume,
+    0,
+    1
+  );
+
+  audioCraziness = constrain(audioCraziness, 0, 1);
+
+  // Boost quiet sounds so small sounds still create visible movement
+  audioCraziness = pow(audioCraziness, 0.45);
+
+  if (audioCraziness > TEENO_AUDIO_SETTINGS.peakThreshold) {
+    audioPeak = 1;
+  } else {
+    audioPeak *= TEENO_AUDIO_SETTINGS.peakDecay;
+  }
+}
+
+
+// =====================================================
+// These function names are kept for your current planets.js
+// Your planets.js is calling getAudioWobble(i),
+// so this function MUST exist.
+// =====================================================
+
+function getAudioWobble(index = 0) {
+  let t = frameCount * TEENO_AUDIO_SETTINGS.wobbleSpeed;
+
+  let shakeAmount =
+    pow(audioCraziness, 0.65) * TEENO_AUDIO_SETTINGS.maxShake;
+
+  let x = map(
+    noise(t + index * 10),
+    0,
+    1,
+    -shakeAmount,
+    shakeAmount
+  );
+
+  let y = map(
+    noise(t + index * 30 + 100),
+    0,
+    1,
+    -shakeAmount,
+    shakeAmount
+  );
+
+  let z = map(
+    noise(t + index * 50 + 200),
+    0,
+    1,
+    -shakeAmount,
+    shakeAmount
+  );
+
+  return createVector(x, y, z);
+}
+
+
+function getAudioPulse() {
+  return 1 + audioCraziness * TEENO_AUDIO_SETTINGS.maxPulse + audioPeak * 0.15;
+}
+
+
+function getAudioGlowBoost() {
+  return audioCraziness * TEENO_AUDIO_SETTINGS.maxGlowBoost + audioPeak * 100;
+}
+
+
+// =====================================================
+// Optional: one extra standalone audio planet
+// Only use this if you want to draw your own extra planet.
+// If you only want the original planets.js planets to react,
+// you do not need to call drawAudioPlanet().
+// =====================================================
+
+function drawAudioPlanet() {
+  let wobble = getAudioWobble(999);
+  let pulse = getAudioPulse();
+  let glow = getAudioGlowBoost();
+
+  push();
+
+  translate(
+    350 + wobble.x,
+    -120 + wobble.y,
+    wobble.z
+  );
+
+  scale(pulse);
+
+  rotateY(frameCount * 0.5);
+  rotateX(frameCount * 0.15);
+
+  noStroke();
+
+  emissiveMaterial(
+    constrain(60 + glow, 0, 255),
+    constrain(120 + glow * 0.8, 0, 255),
+    constrain(220 + glow, 0, 255)
+  );
+
+  sphere(80, 24, 16);
+
+  pop();
+}
+
+
+// =====================================================
+// Optional debug display
+// Call this only after the main scene works.
+// =====================================================
+
+function drawAudioDebugSimple() {
+  push();
+
+  resetMatrix();
+
+  fill(255);
+  noStroke();
+  textSize(14);
+  textAlign(LEFT, TOP);
+
+  text("Mic: " + (audioStarted ? "ON" : "OFF"), -width / 2 + 20, -height / 2 + 70);
+  text("Volume: " + nf(audioVolume, 1, 3), -width / 2 + 20, -height / 2 + 90);
+  text("Craziness: " + nf(audioCraziness, 1, 3), -width / 2 + 20, -height / 2 + 110);
+
+  pop();
 }

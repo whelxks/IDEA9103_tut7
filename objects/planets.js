@@ -108,6 +108,7 @@ class Planets {
     sphere(p.r, 8, 6);
 
     pop();
+    getAudioWobble(i)
   }
 }
 }

@@ -32,10 +32,13 @@ function setup() {
 
   // Create time-based planet.
   timeBasedPlanetSystem = new TimeBasedPlanetSystem(12, planetRadius);
+
+  setupAudio();
 }
 
 function draw() {
   background(15, 5, 35);
+  
 
   // setup lighting
   ambientLight(90);
@@ -52,6 +55,9 @@ function draw() {
   // Update and display all time-based planets
   timeBasedPlanetSystem.update();
   timeBasedPlanetSystem.display();
+
+  updateAudio();
+  drawAudioPlanet();
 }
 
 function windowResized() {
