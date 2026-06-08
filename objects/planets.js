@@ -36,69 +36,78 @@ class Planets {
   }
 
   display(rocketPosition) {
-    noStroke();
-    const spread = this.planetSpread.value();
-    const radius = this.planetRadius.value();
+  noStroke();
 
-    if (spread !== this.lastSpread || radius !== this.lastRadius) {
-      this.planets = [];
-      this.computeCenters(spread);
-      this.lastSpread = spread;
-      this.lastRadius = radius; // ← here
-    }
+  const spread = this.planetSpread.value();
+  const radius = this.planetRadius.value();
 
-    for (let p of this.planets) {
-      // distance from rocket to planet center
-      p.d = dist(
-        rocketPosition.x,
-        rocketPosition.y,
-        rocketPosition.z,
-        p.x,
-        p.y,
-        p.z,
-      );
-    }
-
-    let min_d = Math.min(...this.planets.map((p) => p.d));
-    let max_d = Math.max(...this.planets.map((p) => p.d));
-
-    for (let [i, p] of this.planets.entries()) {
-      let proximity = constrain(map(p.d, max_d, min_d, 0, 1), 0, 1); // 0 = far away, 1 = right on top of planet
-
-      push();
-      rotateZ(p.zAngle);
-      rotateX(p.xAngle);
-      translate(0, spread, 0);
-
-      texture(this.planetTextures[i % this.planetTextures.length]);
-      sphere(p.r, 8, 6); // reduce subdivisions so it doesnt lag
-
-      // TODO: remove later - test yellow color
-      // resetShader();
-      // noStroke();
-      // fill(220, 255, 0, proximity * 100);
-
-      resetShader();
-      ambientLight(255);
-      let alpha = map(proximity, 0, 1, 30, 200);
-      emissiveMaterial(220 * proximity, 255 * proximity, 0, alpha);
-      sphere(p.r, 8, 6);
-
-      pop();
-    }
+  if (spread !== this.lastSpread || radius !== this.lastRadius) {
+    this.planets = [];
+    this.computeCenters(spread);
+    this.lastSpread = spread;
+    this.lastRadius = radius;
   }
 
-  // TODO: remove later - for debugging purposes
-  drawCenters() {
+  for (let p of this.planets) {
+    p.d = dist(
+      rocketPosition.x,
+      rocketPosition.y,
+      rocketPosition.z,
+      p.x,
+      p.y,
+      p.z
+    );
+  }
+
+  let min_d = Math.min(...this.planets.map((p) => p.d));
+  let max_d = Math.max(...this.planets.map((p) => p.d));
+
+  for (let [i, p] of this.planets.entries()) {
+    let proximity = constrain(map(p.d, max_d, min_d, 0, 1), 0, 1);
+
+    // -------------------------------------
+    // Audio values
+    // -------------------------------------
+    let audioWobble = getAudioWobble(i);
+    let audioPulse = getAudioPulse();
+    let audioGlowBoost = getAudioGlowBoost();
+
     push();
-    noStroke();
-    fill(255, 0, 0);
-    for (let p of this.planets) {
-      push();
-      translate(p.x, p.y, p.z);
-      sphere(4);
-      pop();
-    }
+
+    rotateZ(p.zAngle);
+    rotateX(p.xAngle);
+
+    // Original planet position + audio wobble
+    translate(
+      audioWobble.x,
+      spread + audioWobble.y,
+      audioWobble.z
+    );
+
+    // Audio controls planet scale
+    scale(audioPulse);
+
+    // Original planet texture
+    texture(this.planetTextures[i % this.planetTextures.length]);
+    sphere(p.r, 8, 6);
+
+    // -------------------------------------
+    // Proximity glow + audio glow
+    // -------------------------------------
+    resetShader();
+    ambientLight(255);
+
+    let alpha = map(proximity, 0, 1, 30, 200);
+
+    let audioGlow = audioGlowBoost;
+    let glowR = constrain(220 * proximity + audioGlow, 0, 255);
+    let glowG = constrain(255 * proximity + audioGlow, 0, 255);
+    let glowB = constrain(audioGlow * 0.8, 0, 255);
+
+    emissiveMaterial(glowR, glowG, glowB, alpha);
+    sphere(p.r, 8, 6);
+
     pop();
   }
+}
 }
