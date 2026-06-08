@@ -1,136 +1,82 @@
 // =====================================================
-// Cosmic Drift - Standalone Audio Reactive Planets
+// Cosmic Drift - Audio Mechanic
 // Owner: Teeno
-// Description:
-// A standalone p5.js + p5.sound sketch.
-// Microphone volume controls planet wobble, pulse, and glow.
+// Purpose:
+// Use microphone input to generate an audioCraziness value.
+// This value can control planet shaking, pulsing, wobbling,
+// glow intensity, orbit distortion, and background energy.
 // =====================================================
 
 
 // -------------------------
-// Audio variables
+// Global audio variables
 // -------------------------
 
 let mic;
 let amplitude;
-let audioStarted = false;
 
+// Raw microphone volume.
+// Usually ranges from 0.0 to around 0.3 depending on the microphone.
 let audioVolume = 0;
+
+// Smoothed volume makes the visual response less jumpy.
 let smoothedAudioVolume = 0;
+
+// Main shared audio parameter.
+// Keep this value between 0 and 1.
+// Other group members can use this variable directly.
 let audioCraziness = 0;
+
+// Optional value for sudden loud sound detection,
+// such as clapping or shouting.
 let audioPeak = 0;
+
+// Whether the microphone has started.
+let audioStarted = false;
 
 
 // -------------------------
-// Audio sensitivity settings
+// Unified audio parameters
 // -------------------------
 
 const AUDIO_SETTINGS = {
-  // Smaller value means the sketch reacts to quieter sound.
   minVolume: 0.002,
-
-  // Smaller value means higher sensitivity.
-  // If the planets are still not moving enough, change this to 0.025.
-  maxVolume: 0.04,
-
-  // Lower smoothing = faster and more sensitive reaction.
-  smoothing: 0.6,
-
-  // Maximum shake distance.
-  maxShake: 280,
-
-  // Maximum planet scale increase.
-  maxPulse: 0.75,
-
-  // Maximum glow increase.
-  maxGlowBoost: 220,
-
-  // Wobble speed.
-  wobbleSpeed: 0.08,
-
-  // Peak detection threshold.
+  maxVolume: 0.045,
+  smoothing: 0.65,
+  maxShake: 300,
+  maxPulse: 0.8,
+  maxGlowBoost: 180,
+  wobbleSpeed: 0.06,
   peakThreshold: 0.45,
-
-  // Peak fade speed.
   peakDecay: 0.92
 };
 
 
-// -------------------------
-// Scene variables
-// -------------------------
-
-let planetsSystem;
-let micButton;
-
-
-// These replace the original sliders.
-// You can adjust these two values manually.
-let planetSpreadValue = 260;
-let planetRadiusValue = 36;
-
-
 // =====================================================
-// p5 setup
-// =====================================================
-
-function setup() {
-  createCanvas(windowWidth, windowHeight, WEBGL);
-
-  angleMode(DEGREES);
-
-  setupAudio();
-
-  planetsSystem = new Planets(planetSpreadValue, planetRadiusValue);
-
-  createMicButton();
-
-  textFont("Arial");
-}
-
-
-// =====================================================
-// p5 draw
-// =====================================================
-
-function draw() {
-  background(5, 8, 18);
-
-  updateAudio();
-
-  orbitControl();
-
-  // Basic lighting
-  ambientLight(40);
-  directionalLight(255, 255, 255, -0.5, 0.7, -1);
-
-  // Rotate the whole planet system slowly
-  rotateY(frameCount * 0.15);
-  rotateX(frameCount * 0.04);
-
-  planetsSystem.display();
-
-  drawAudioDebug();
-}
-
-
-// =====================================================
-// Audio setup
+// Setup function
+// Call this once inside setup()
 // =====================================================
 
 function setupAudio() {
   mic = new p5.AudioIn();
   amplitude = new p5.Amplitude();
 
-  console.log("Audio system ready. Click the microphone button to start.");
+  // Do not start the microphone here automatically.
+  // Browsers usually require user interaction first.
+  console.log("Audio system ready. Click or press a key to start microphone.");
 }
 
+
+// =====================================================
+// Start audio function
+// Call this inside mousePressed() or keyPressed()
+// =====================================================
 
 function startAudioInput() {
   if (!audioStarted) {
     userStartAudio();
 
-    mic.start(function () {
+    mic.start(() => {
       amplitude.setInput(mic);
       audioStarted = true;
       console.log("Microphone started.");
@@ -138,6 +84,11 @@ function startAudioInput() {
   }
 }
 
+
+// =====================================================
+// Update function
+// Call this once every frame inside draw()
+// =====================================================
 
 function updateAudio() {
   if (!audioStarted) {
@@ -148,14 +99,15 @@ function updateAudio() {
     return;
   }
 
+  // Get current microphone level.
   audioVolume = amplitude.getLevel();
 
-  // Smooth the volume
+  // Smooth the volume to avoid harsh flickering.
   smoothedAudioVolume =
     smoothedAudioVolume * AUDIO_SETTINGS.smoothing +
     audioVolume * (1 - AUDIO_SETTINGS.smoothing);
 
-  // Map microphone volume to 0 - 1
+  // Convert microphone volume into a shared 0-1 value.
   audioCraziness = map(
     smoothedAudioVolume,
     AUDIO_SETTINGS.minVolume,
@@ -166,11 +118,7 @@ function updateAudio() {
 
   audioCraziness = constrain(audioCraziness, 0, 1);
 
-  // Boost quiet sounds.
-  // This makes small sound produce visible movement.
-  audioCraziness = pow(audioCraziness, 0.45);
-
-  // Peak detection for sudden loud sound
+  // Detect sudden loud sound.
   if (audioCraziness > AUDIO_SETTINGS.peakThreshold) {
     audioPeak = 1;
   } else {
@@ -181,32 +129,65 @@ function updateAudio() {
 
 // =====================================================
 // Audio helper functions
+// Other mechanics can use these functions.
 // =====================================================
 
+
+// Returns a smooth 3D wobble offset for a planet.
+// index makes each planet move differently.
 function getAudioWobble(index) {
   let t = frameCount * AUDIO_SETTINGS.wobbleSpeed;
 
-  // Stronger low-volume wobble
-  let shakeAmount = pow(audioCraziness, 0.65) * AUDIO_SETTINGS.maxShake;
+  let shakeAmount = audioCraziness * AUDIO_SETTINGS.maxShake;
 
-  let x = map(noise(t + index * 11), 0, 1, -shakeAmount, shakeAmount);
-  let y = map(noise(t + index * 23), 0, 1, -shakeAmount, shakeAmount);
-  let z = map(noise(t + index * 37), 0, 1, -shakeAmount, shakeAmount);
+  let x = map(
+    noise(t + index * 10),
+    0,
+    1,
+    -shakeAmount,
+    shakeAmount
+  );
+
+  let y = map(
+    noise(t + index * 20),
+    0,
+    1,
+    -shakeAmount,
+    shakeAmount
+  );
+
+  let z = map(
+    noise(t + index * 30),
+    0,
+    1,
+    -shakeAmount,
+    shakeAmount
+  );
 
   return createVector(x, y, z);
 }
 
 
+// Returns scale multiplier for planet pulsing.
 function getAudioPulse() {
-  return 1 + audioCraziness * AUDIO_SETTINGS.maxPulse + audioPeak * 0.2;
+  return 1 + audioCraziness * AUDIO_SETTINGS.maxPulse + audioPeak * 0.15;
 }
 
 
+// Returns extra glow value caused by audio.
 function getAudioGlowBoost() {
-  return audioCraziness * AUDIO_SETTINGS.maxGlowBoost + audioPeak * 100;
+  return audioCraziness * AUDIO_SETTINGS.maxGlowBoost + audioPeak * 80;
 }
 
 
+// Returns a value that can be used to distort orbit movement.
+function getAudioOrbitDistortion() {
+  return audioCraziness * 50 + audioPeak * 30;
+}
+
+
+// Optional: returns a simple audio state label.
+// Useful for debugging or showing text on screen.
 function getAudioState() {
   if (!audioStarted) {
     return "MIC OFF";
@@ -223,143 +204,10 @@ function getAudioState() {
 
 
 // =====================================================
-// Button
-// =====================================================
-
-function createMicButton() {
-  micButton = createButton("🎙 Start Microphone");
-
-  micButton.position(20, 20);
-  micButton.style("z-index", "9999");
-  micButton.style("position", "fixed");
-  micButton.style("padding", "12px 18px");
-  micButton.style("border", "1px solid white");
-  micButton.style("border-radius", "8px");
-  micButton.style("background", "rgba(0, 0, 0, 0.75)");
-  micButton.style("color", "white");
-  micButton.style("font-size", "14px");
-  micButton.style("font-family", "Arial, sans-serif");
-  micButton.style("cursor", "pointer");
-
-  micButton.mousePressed(function () {
-    startAudioInput();
-    micButton.html("🎙 Microphone On");
-    micButton.style("background", "rgba(60, 180, 120, 0.85)");
-  });
-}
-
-
-// =====================================================
-// Planets class
-// This is based on your original planet code,
-// but modified to be standalone and audio-reactive.
-// =====================================================
-
-class Planets {
-  constructor(planetSpread, planetRadius) {
-    this.planetSpread = planetSpread;
-    this.planetRadius = planetRadius;
-    this.planets = [];
-
-    this.computeCenters(this.planetSpread);
-  }
-
-  computeCenters(spread) {
-    const radius = this.planetRadius;
-
-    for (let zAngle = 0; zAngle < 180; zAngle += 30) {
-      for (let xAngle = 0; xAngle < 360; xAngle += 30) {
-        let r = map(sin(zAngle), 0, 1, radius - 10, radius + 10);
-
-        let ay = spread * cos(xAngle);
-        let az = spread * sin(xAngle);
-
-        let wx = -ay * sin(zAngle);
-        let wy = ay * cos(zAngle);
-        let wz = az;
-
-        this.planets.push({
-          x: wx,
-          y: wy,
-          z: wz,
-          r: r,
-          zAngle: zAngle,
-          xAngle: xAngle
-        });
-      }
-    }
-  }
-
-  display() {
-    noStroke();
-
-    let spread = this.planetSpread;
-
-    for (let [i, p] of this.planets.entries()) {
-      // Get audio values for each planet
-      let audioWobble = getAudioWobble(i);
-      let audioPulse = getAudioPulse();
-      let audioGlowBoost = getAudioGlowBoost();
-
-      push();
-
-      // Original planet positioning logic
-      rotateZ(p.zAngle);
-      rotateX(p.xAngle);
-
-      // Original translate structure + audio wobble
-      translate(
-        audioWobble.x,
-        spread + audioWobble.y,
-        audioWobble.z
-      );
-
-      // Audio controls planet size pulse
-      scale(audioPulse);
-
-      // Slight self rotation
-      rotateY(frameCount * 0.8 + i * 10);
-      rotateX(frameCount * 0.3 + i * 5);
-
-      // Base planet color
-      let baseR = 60 + (i * 30) % 160;
-      let baseG = 90 + (i * 45) % 150;
-      let baseB = 160 + (i * 25) % 95;
-
-      // Audio glow color
-      let glowR = constrain(baseR + audioGlowBoost, 0, 255);
-      let glowG = constrain(baseG + audioGlowBoost * 0.7, 0, 255);
-      let glowB = constrain(baseB + audioGlowBoost, 0, 255);
-
-      // Main glowing material
-      emissiveMaterial(glowR, glowG, glowB);
-
-      sphere(p.r, 12, 8);
-
-      // Extra outer glow shell
-      if (audioCraziness > 0.05) {
-        push();
-
-        let glowScale = 1.15 + audioCraziness * 0.8;
-        scale(glowScale);
-
-        let alphaGlow = map(audioCraziness, 0, 1, 20, 120);
-
-        fill(glowR, glowG, glowB, alphaGlow);
-        noStroke();
-        sphere(p.r, 12, 8);
-
-        pop();
-      }
-
-      pop();
-    }
-  }
-}
-
-
-// =====================================================
-// Debug display
+// Optional debug display
+// You can call this inside draw() if you want to see values.
+// Because the main project uses WEBGL, this uses resetMatrix()
+// so the text stays on the screen.
 // =====================================================
 
 function drawAudioDebug() {
@@ -372,19 +220,26 @@ function drawAudioDebug() {
   textSize(14);
   textAlign(LEFT, TOP);
 
-  text("Audio State: " + getAudioState(), -width / 2 + 20, -height / 2 + 70);
-  text("Volume: " + nf(audioVolume, 1, 3), -width / 2 + 20, -height / 2 + 90);
-  text("Craziness: " + nf(audioCraziness, 1, 3), -width / 2 + 20, -height / 2 + 110);
-  text("Peak: " + nf(audioPeak, 1, 3), -width / 2 + 20, -height / 2 + 130);
+  text("Audio State: " + getAudioState(), -width / 2 + 20, -height / 2 + 20);
+  text("Volume: " + nf(audioVolume, 1, 3), -width / 2 + 20, -height / 2 + 40);
+  text("Craziness: " + nf(audioCraziness, 1, 3), -width / 2 + 20, -height / 2 + 60);
+  text("Peak: " + nf(audioPeak, 1, 3), -width / 2 + 20, -height / 2 + 80);
 
   pop();
 }
 
+function setupAudioButton() {
+  const micButton = document.getElementById("micButton");
 
-// =====================================================
-// Window resize
-// =====================================================
+  if (!micButton) {
+    console.warn("Mic button not found.");
+    return;
+  }
 
-function windowResized() {
-  resizeCanvas(windowWidth, windowHeight);
+  micButton.addEventListener("click", function () {
+    startAudioInput();
+
+    micButton.innerText = "🎙 Microphone On";
+    micButton.classList.add("active");
+  });
 }
