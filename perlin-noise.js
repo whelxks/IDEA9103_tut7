@@ -1,5 +1,5 @@
 class PerlinNoise {
-
+//initilizes the concentric circles in the beginning
   constructor() {
     this.circles = [];
     for (let radius = 0.5; radius < 20; radius += 0.4) {
@@ -7,7 +7,6 @@ class PerlinNoise {
      this.circles.push(circle);
   }  
   }
-
 //fallback for when it's called with no argument
  w(val) { //converts the units (0-1) into pixels for the canvas size
   if (val == null)
