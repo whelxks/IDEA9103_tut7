@@ -40,36 +40,15 @@ let audioStarted = false;
 // -------------------------
 
 const AUDIO_SETTINGS = {
-  // Minimum microphone level.
-  // Anything below this will be treated as silence.
-  minVolume: 0.01,
-
-  // Maximum expected microphone level.
-  // You can adjust this after testing.
-  // Lower value = more sensitive.
-  maxVolume: 0.25,
-
-  // Smoothness of audio response.
-  // Higher = smoother but slower.
-  smoothing: 0.85,
-
-  // Maximum planet shaking distance caused by audio.
-  maxShake: 80,
-
-  // Maximum planet scale increase caused by audio.
-  maxPulse: 0.4,
-
-  // Maximum extra glow caused by audio.
-  maxGlowBoost: 120,
-
-  // Noise speed for smooth wobbling.
-  wobbleSpeed: 0.03,
-
-  // Threshold for detecting a sudden loud sound.
-  peakThreshold: 0.65,
-
-  // How quickly the peak effect fades.
-  peakDecay: 0.9
+  minVolume: 0.002,
+  maxVolume: 0.045,
+  smoothing: 0.65,
+  maxShake: 300,
+  maxPulse: 0.8,
+  maxGlowBoost: 180,
+  wobbleSpeed: 0.06,
+  peakThreshold: 0.45,
+  peakDecay: 0.92
 };
 
 
@@ -247,4 +226,20 @@ function drawAudioDebug() {
   text("Peak: " + nf(audioPeak, 1, 3), -width / 2 + 20, -height / 2 + 80);
 
   pop();
+}
+
+function setupAudioButton() {
+  const micButton = document.getElementById("micButton");
+
+  if (!micButton) {
+    console.warn("Mic button not found.");
+    return;
+  }
+
+  micButton.addEventListener("click", function () {
+    startAudioInput();
+
+    micButton.innerText = "🎙 Microphone On";
+    micButton.classList.add("active");
+  });
 }

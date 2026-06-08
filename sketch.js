@@ -4,6 +4,7 @@ let planets;
 let rocketFlame;
 let rocket;
 
+
 let planetTextures = [];
 
 // This will control all time-based exploding planets
@@ -56,3 +57,11 @@ function draw() {
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
 }
+
+setupAudio();
+updateAudio();
+startAudioInput();
+
+getAudioWobble(index)
+getAudioPulse()
+getAudioGlowBoost()

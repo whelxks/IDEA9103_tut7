@@ -6,3 +6,30 @@ html, body {
 canvas {
   display: block;
 }
+
+#micButton {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 9999;
+
+  padding: 12px 18px;
+  border: 1px solid white;
+  border-radius: 8px;
+
+  background: rgba(0, 0, 0, 0.75);
+  color: white;
+
+  font-size: 14px;
+  font-family: Arial, sans-serif;
+  cursor: pointer;
+}
+
+#micButton:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+#micButton.active {
+  background: rgba(60, 180, 120, 0.85);
+  border-color: rgba(60, 180, 120, 1);
+}
