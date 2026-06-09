@@ -122,8 +122,30 @@ Two sliders let users adjust the composition: **Planet Spread** controls spacing
 
 ---
 
-# How to Run
+# Interaction Instructions
+Open `index.html` with the **Live Server** extension. Chrome is recommended for best performance.
+When prompted, **allow microphone access**, then click **Start Microphone** and speak or shout to trigger audio-reactive effects.
 
-Open `index.html` with the **Live Server** extension (recommended). Chrome is advised for best performance.
+**Camera**
+- **Click + Drag** — rotate view
 
-When prompted, **allow microphone access** to enable audio-reactive features.
+**Spaceship Controls**
+- **W** — forward
+- **A** — left
+- **S** — backward
+- **D** — right
+- **Q** — up
+- **E** — down
+
+---
+
+## AI Acknowledgement
+Claude and ChatGPT were used for debugging assistance throughout development. Specific instances are commented inline in the code.
+
+
+# Video Recording of all mechanisms
+https://youtu.be/qZNKxoNurzE
+
+
+
+
