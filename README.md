@@ -42,11 +42,24 @@ The mechanic connects to the project's vision by making the universe emotionally
 
 **Scheduled Planet Explosions**
 
-The time-based mechanic uses millis() and internal timers to trigger periodic planet explosion events at configurable intervals. Instead of creating a complex 3D explosion, the planet is built from small 2D particles from the beginning. When the timer expires, the planet enters a short explosion sequence: it first shakes slightly, then its particles burst outward and scatter across the screen.
+## Time-Based Mechanic
 
-The explosion is controlled through simple state changes such as forming, shaking, exploding, scattered, and reforming. Each stage has a clear duration, making the mechanic easier to manage and debug. After the particles scatter, they gradually return to their original positions, allowing the planet to reform and continue the cycle.
+The time-based mechanic uses `millis()` and internal timers to trigger repeated planet explosion cycles. Each planet is built from many small 3D particle spheres, forming a clustered planet-like body in space. The size of each time-based planet is linked to the shared `planetRadius` slider, ensuring that the effect remains connected to the rest of the planet system.
 
-This mechanic supports the vision of Cosmic Drift by keeping the universe alive even when the user is idle. The planet does not remain static; it periodically destabilises, explodes, scatters, and reforms on its own schedule. This creates the feeling of a living cosmic system, where planets are constantly changing rather than simply being displayed. The timed and slightly randomised movement also makes the scene feel less predictable and encourages users to keep watching.
+The mechanic is organised through a simple state system consisting of five stages:
+
+* `forming`
+* `shaking`
+* `exploding`
+* `scattered`
+* `reforming`
+
+During the **forming** stage, particles remain close to their original positions while displaying subtle floating motion. When the timer reaches its threshold, the planet enters the **shaking** stage, briefly vibrating as a visual warning. It then transitions into the **exploding** stage, where particles burst outward in 3D space. After becoming **scattered**, the particles gradually slow down and begin returning to their original locations during the **reforming** stage, allowing the planet to rebuild itself and restart the cycle.
+
+A `TimeBasedPlanetSystem` class is used to generate and manage multiple time-based planets through a reusable structure. Each planet is positioned differently and assigned slightly varied timing values, start delays, and scales. These variations prevent the explosions from appearing overly repetitive and help create a more natural and organic visual rhythm.
+
+This mechanic supports the vision of *Cosmic Drift* by giving the universe its own autonomous rhythm, even when the user is not interacting with the scene. Rather than remaining static, planets periodically destabilise, explode, scatter, and reform according to their own schedules. This behaviour creates the impression of a living cosmic environment in which celestial bodies are constantly evolving and transforming over time.
+
 
 ---
 
@@ -93,5 +106,20 @@ This mechanic connects to the vision by making the user an *agent* in the world,
 
 ## Part 3: Putting It Together
 
-All four mechanics share a single 3D p5.js canvas using `WEBGL` mode with orbit controls. The background noise field occupies the full canvas as a base layer. Planets are distributed in 3D space and respond simultaneously to audio (wobble), timers (explosions), and user proximity (glow). The spaceship — controlled by the user — acts as the unifying protagonist: its position influences glow across all planets, while audio and explosions fire independently, ensuring the scene is alive even when the user is still. Visually, the dark space palette and consistent point-lighting tie all elements together.
+## Integration of Mechanics
+
+* All four mechanics share a single **3D p5.js canvas** using `WEBGL` mode with orbit controls.
+* The **background noise field** occupies the full canvas as a base layer.
+* **Planets** are distributed in 3D space, and across the planet system, different behaviours respond to:
+
+  * **Audio input** → wobble effect
+  * **Timers** → explosion events
+  * **User proximity** → glow effect
+* The **spaceship**, controlled by the user, acts as the unifying protagonist:
+
+  * Its position influences the glow behaviour of all planets.
+  * Audio-driven wobble and timer-based explosions operate independently.
+  * This ensures the scene remains active even when the user is not moving.
+* Visually, a **dark space colour palette** and **consistent point-lighting** unify all elements into a cohesive interactive environment.
+
 
