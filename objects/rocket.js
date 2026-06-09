@@ -2,7 +2,7 @@ class Rocket {
   constructor(x = 0, y = 0, z = 0, rocketFlame, planetSpread) {
     this.position = createVector(x, y, z);
     this.forward = createVector(0, 0, -1); // normal vector from cone tip
-    this.speed = 6;
+    this.speed = 50;
     this.turnSpeed = 2;
     this.size = 24;
     this.rocketFlame = rocketFlame;
@@ -51,13 +51,13 @@ class Rocket {
     rotateX(90);
     noStroke();
     fill(160, 220, 255);
-    cylinder(this.size * radius, this.size * cylinderHeight); // radius, height
+    cylinder(this.size * radius, this.size * cylinderHeight);
 
     push();
     translate(0, -this.size * 3.5, 0);
     rotateX(180);
     fill(255, 130, 50);
-    cone(this.size * radius, this.size * coneHeight); // radius, height
+    cone(this.size * radius, this.size * coneHeight);
     pop();
 
     push();
@@ -68,25 +68,5 @@ class Rocket {
     pop();
 
     pop();
-
-    // TODO: remove later, to debug: normal vector
-    // push();
-    // const coneOffset =
-    //   this.size * (cylinderHeight / 2) + this.size * coneHeight;
-    // const tipX = this.position.x + this.forward.x * coneOffset;
-    // const tipY = this.position.y;
-    // const tipZ = this.position.z + this.forward.z * coneOffset;
-
-    // stroke(0, 255, 0);
-    // strokeWeight(2);
-    // line(
-    //   tipX,
-    //   tipY,
-    //   tipZ,
-    //   tipX + this.forward.x * 80,
-    //   tipY,
-    //   tipZ + this.forward.z * 80,
-    // );
-    // pop();
   }
 }

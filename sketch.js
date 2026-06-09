@@ -4,7 +4,6 @@ let planets;
 let rocketFlame;
 let rocket;
 
-
 let planetTextures = [];
 
 // This will control all time-based exploding planets
@@ -30,7 +29,6 @@ function setup() {
   planets = new Planets(planetTextures, planetSpread, planetRadius);
   rocket = new Rocket(0, 0, 0, rocketFlame, planetSpread);
 
-  // Create time-based planet.
   timeBasedPlanetSystem = new TimeBasedPlanetSystem(12, planetRadius);
 
   setupAudio();
@@ -38,12 +36,11 @@ function setup() {
 
 function draw() {
   background(15, 5, 35);
-  
 
   // setup lighting
   ambientLight(90);
-  pointLight(255,255,255,0,-200,400);
-  pointLight(255,180,180,0,-300,400);
+  pointLight(255, 255, 255, 0, -200, 400);
+  pointLight(255, 180, 180, 0, -300, 400);
 
   orbits.backgroundCircles();
   orbitControl();
@@ -51,7 +48,7 @@ function draw() {
   rocket.display();
 
   planets.display(rocket.position);
-  
+
   // Update and display all time-based planets
   timeBasedPlanetSystem.update();
   timeBasedPlanetSystem.display();
@@ -63,11 +60,3 @@ function draw() {
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
 }
-
-setupAudio();
-updateAudio();
-startAudioInput();
-
-getAudioWobble(index)
-getAudioPulse()
-getAudioGlowBoost()

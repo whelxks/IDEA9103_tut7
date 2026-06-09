@@ -42,8 +42,6 @@ The mechanic connects to the project's vision by making the universe emotionally
 
 **Scheduled Planet Explosions**
 
-## Time-Based Mechanic
-
 The time-based mechanic uses `millis()` and internal timers to trigger repeated planet explosion cycles. Each planet is built from many small 3D particle spheres, forming a clustered planet-like body in space. The size of each time-based planet is linked to the shared `planetRadius` slider, ensuring that the effect remains connected to the rest of the planet system.
 
 The mechanic is organised through a simple state system consisting of five stages:
@@ -94,19 +92,19 @@ My code was inspired by https://www.generativehut.com/post/recreating-the-noise-
 
 **Spaceship Movement & Proximity Glow**
 
-The user input mechanic puts the user in the pilot's seat. **WASD keys** move a spaceship model through the 3D scene, while **scroll wheel** controls camera zoom in/out (complementing the orbit control). The spaceship is rendered as a simple 3D shape (e.g., `cone()` + `box()` composited) with a directional thruster glow effect.
+The user takes control of a rocket navigating through 3D space. **WASD + QE keys** fly the spaceship through the scene, the **scroll wheel** zooms the camera in and out, and **click-and-drag** rotates the view.
 
-As the spaceship moves closer to any planet, a **proximity glow** effect activates — the planet's emissive colour and pointLight intensity increase proportionally to the inverse of the distance between the spaceship and the planet. This creates a "lighting the way" metaphor: the spaceship is a source of warmth and revelation in a dark universe.
+The spaceship is built from composited 3D primitives (`cone()` + `cylinder()`) paired with a flame object.
 
-Mouse position is also used to steer the ship's heading in 3D space (mapped to rotations), giving fluid, intuitive directional control. The interaction model is intentionally simple — forgiving and explorative rather than precise — so users can focus on experiencing the generative visuals rather than fighting controls.
+As the spaceship approaches a planet, a **proximity glow** effect activates. The emissive intensity scales with closeness, so the nearer you get, the brighter it burns. This affects every planet simultaneously, meaning your movement shapes the entire visual atmosphere of the scene.
 
-This mechanic connects to the vision by making the user an *agent* in the world, not just an observer. The proximity glow ties the user's presence directly to the visual state of every planet — your spaceship literally changes how the world looks.
+Two sliders let users adjust the composition: **Planet Spread** controls spacing between planets, and **Planet Radius** controls their size. Planets are rendered at low subdivisions to keep performance smooth.
 
 ---
 
 ## Part 3: Putting It Together
 
-## Integration of Mechanics
+### Integration of Mechanics
 
 * All four mechanics share a single **3D p5.js canvas** using `WEBGL` mode with orbit controls.
 * The **background noise field** occupies the full canvas as a base layer.
@@ -122,4 +120,10 @@ This mechanic connects to the vision by making the user an *agent* in the world,
   * This ensures the scene remains active even when the user is not moving.
 * Visually, a **dark space colour palette** and **consistent point-lighting** unify all elements into a cohesive interactive environment.
 
+---
 
+# How to Run
+
+Open `index.html` with the **Live Server** extension (recommended). Chrome is advised for best performance.
+
+When prompted, **allow microphone access** to enable audio-reactive features.

@@ -6,7 +6,6 @@
 // This version is designed to work with the existing planets.js.
 // =====================================================
 
-
 // -------------------------
 // Audio variables
 // -------------------------
@@ -18,7 +17,6 @@ let audioVolume = 0;
 let smoothedAudioVolume = 0;
 let audioCraziness = 0;
 let audioPeak = 0;
-
 
 // -------------------------
 // Audio settings
@@ -38,7 +36,7 @@ const TEENO_AUDIO_SETTINGS = {
   maxShake: 400,
 
   // Planet size pulse strength
-  maxPulse: 2.90,
+  maxPulse: 2.9,
 
   // Glow strength
   maxGlowBoost: 500,
@@ -50,9 +48,8 @@ const TEENO_AUDIO_SETTINGS = {
   peakThreshold: 0.45,
 
   // Peak fade speed
-  peakDecay: 0.92
+  peakDecay: 0.92,
 };
-
 
 // =====================================================
 // Call this inside sketch.js setup()
@@ -66,7 +63,6 @@ function setupAudio() {
   console.log("Teeno audio system ready.");
 }
 
-
 // =====================================================
 // Connect to the HTML microphone button
 // Your index.html already has:
@@ -75,7 +71,9 @@ function setupAudio() {
 
 function setupAudioButton() {
   const micButton = document.getElementById("micButton");
-
+  micButton.style.position = "absolute";
+  micButton.style.top = "103px";
+  micButton.style.left = "20px";
   if (!micButton) {
     console.warn("Mic button not found.");
     return;
@@ -89,7 +87,6 @@ function setupAudioButton() {
     micButton.style.color = "white";
   });
 }
-
 
 // =====================================================
 // Start microphone
@@ -105,7 +102,6 @@ function startAudioInput() {
     });
   }
 }
-
 
 // =====================================================
 // Call this inside sketch.js draw()
@@ -134,7 +130,7 @@ function updateAudio() {
     TEENO_AUDIO_SETTINGS.minVolume,
     TEENO_AUDIO_SETTINGS.maxVolume,
     0,
-    1
+    1,
   );
 
   audioCraziness = constrain(audioCraziness, 0, 1);
@@ -149,7 +145,6 @@ function updateAudio() {
   }
 }
 
-
 // =====================================================
 // These function names are kept for your current planets.js
 // Your planets.js is calling getAudioWobble(i),
@@ -159,46 +154,24 @@ function updateAudio() {
 function getAudioWobble(index = 0) {
   let t = frameCount * TEENO_AUDIO_SETTINGS.wobbleSpeed;
 
-  let shakeAmount =
-    pow(audioCraziness, 0.65) * TEENO_AUDIO_SETTINGS.maxShake;
+  let shakeAmount = pow(audioCraziness, 0.65) * TEENO_AUDIO_SETTINGS.maxShake;
 
-  let x = map(
-    noise(t + index * 10),
-    0,
-    1,
-    -shakeAmount,
-    shakeAmount
-  );
+  let x = map(noise(t + index * 10), 0, 1, -shakeAmount, shakeAmount);
 
-  let y = map(
-    noise(t + index * 30 + 100),
-    0,
-    1,
-    -shakeAmount,
-    shakeAmount
-  );
+  let y = map(noise(t + index * 30 + 100), 0, 1, -shakeAmount, shakeAmount);
 
-  let z = map(
-    noise(t + index * 50 + 200),
-    0,
-    1,
-    -shakeAmount,
-    shakeAmount
-  );
+  let z = map(noise(t + index * 50 + 200), 0, 1, -shakeAmount, shakeAmount);
 
   return createVector(x, y, z);
 }
-
 
 function getAudioPulse() {
   return 1 + audioCraziness * TEENO_AUDIO_SETTINGS.maxPulse + audioPeak * 0.15;
 }
 
-
 function getAudioGlowBoost() {
   return audioCraziness * TEENO_AUDIO_SETTINGS.maxGlowBoost + audioPeak * 100;
 }
-
 
 // =====================================================
 // Optional: one extra standalone audio planet
@@ -214,11 +187,7 @@ function drawAudioPlanet() {
 
   push();
 
-  translate(
-    350 + wobble.x,
-    -120 + wobble.y,
-    wobble.z
-  );
+  translate(350 + wobble.x, -120 + wobble.y, wobble.z);
 
   scale(pulse);
 
@@ -230,14 +199,13 @@ function drawAudioPlanet() {
   emissiveMaterial(
     constrain(60 + glow, 0, 255),
     constrain(120 + glow * 0.8, 0, 255),
-    constrain(220 + glow, 0, 255)
+    constrain(220 + glow, 0, 255),
   );
 
   sphere(80, 24, 16);
 
   pop();
 }
-
 
 // =====================================================
 // Optional debug display
@@ -254,9 +222,17 @@ function drawAudioDebugSimple() {
   textSize(14);
   textAlign(LEFT, TOP);
 
-  text("Mic: " + (audioStarted ? "ON" : "OFF"), -width / 2 + 20, -height / 2 + 70);
+  text(
+    "Mic: " + (audioStarted ? "ON" : "OFF"),
+    -width / 2 + 20,
+    -height / 2 + 70,
+  );
   text("Volume: " + nf(audioVolume, 1, 3), -width / 2 + 20, -height / 2 + 90);
-  text("Craziness: " + nf(audioCraziness, 1, 3), -width / 2 + 20, -height / 2 + 110);
+  text(
+    "Craziness: " + nf(audioCraziness, 1, 3),
+    -width / 2 + 20,
+    -height / 2 + 110,
+  );
 
   pop();
 }
